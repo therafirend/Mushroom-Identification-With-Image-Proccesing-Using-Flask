@@ -8,7 +8,7 @@ from flask import Flask, render_template, request, send_file
 
 app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-model = load_model(os.path.join(BASE_DIR, 'model.hdf5'))
+model = load_model(os.path.join(BASE_DIR, 'model-rest-net.hdf5'))
 
 ALLOWED_EXT = set(['jpg', 'jpeg', 'png', 'jfif'])
 
@@ -18,19 +18,20 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1] in ALLOWED_EXT
 
 
-classes = ['Agaricus Bisporus', 'Agaricus Brunescens', 'Agaricus Volvaceus', 'Ganoderma Lucidum', 'Pholiota Microspora',
+classes = ['Agaricus Bisporus', 'Agaricus Brunescens', 'Agaricus Volvaceus', 'Chlorophyllum Molybdites', 'Clitocybe Sp',
+           'Ganoderma Lucidum', 'Pholiota Microspora',
            'Pleurotus Flabellatus']
 
 
 def predict(filename, model):
-    img = load_img(filename, target_size=(128, 128))
+    img = load_img(filename, target_size=(64, 64))
     img = img_to_array(img)
-    img = img.reshape(1, 128, 128, 3)
+    img = img.reshape(1, 64, 64, 3)
     img = img.astype('float32')
     img = img / 255.0
     result = model.predict(img)
     dict_result = {}
-    for i in range(6):
+    for i in range(8):
         dict_result[result[0][i]] = classes[i]
     res = result[0]
     res.sort()
@@ -67,6 +68,14 @@ def success():
                 output.close()
                 img = filename
                 class_result, prob_result = predict(img_path, model)
+
+                categ1 = "Edible" if class_result[0] != 'Chlorophyllum Molybdites' and class_result[
+                    0] != 'Clitocybe Sp' else "Poisonus"
+                categ2 = "Edible" if class_result[1] != 'Chlorophyllum Molybdites' and class_result[
+                    1] != 'Clitocybe Sp' else "Poisonus"
+                categ3 = "Edible" if class_result[2] != 'Chlorophyllum Molybdites' and class_result[
+                    2] != 'Clitocybe Sp' else "Poisonus"
+
                 predictions = {
                     "class1": class_result[0],
                     "class2": class_result[1],
@@ -74,6 +83,9 @@ def success():
                     "prob1": prob_result[0],
                     "prob2": prob_result[1],
                     "prob3": prob_result[2],
+                    "categ1": categ1,
+                    "categ2": categ2,
+                    "categ3": categ3,
                 }
             except Exception as e:
                 print(str(e))
@@ -90,6 +102,12 @@ def success():
                 img_path = os.path.join(target_img, file.filename)
                 img = file.filename
                 class_result, prob_result = predict(img_path, model)
+                categ1 = "Edible" if class_result[0] != 'Chlorophyllum Molybdites' and class_result[
+                    0] != 'Clitocybe Sp' else "Poisonus"
+                categ2 = "Edible" if class_result[1] != 'Chlorophyllum Molybdites' and class_result[
+                    1] != 'Clitocybe Sp' else "Poisonus"
+                categ3 = "Edible" if class_result[2] != 'Chlorophyllum Molybdites' and class_result[
+                    2] != 'Clitocybe Sp' else "Poisonus"
                 predictions = {
                     "class1": class_result[0],
                     "class2": class_result[1],
@@ -97,6 +115,9 @@ def success():
                     "prob1": prob_result[0],
                     "prob2": prob_result[1],
                     "prob3": prob_result[2],
+                    "categ1": categ1,
+                    "categ2": categ2,
+                    "categ3": categ3,
                 }
             else:
                 error = "Please upload images of jpg , jpeg and png extension only"
